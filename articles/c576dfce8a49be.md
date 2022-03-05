@@ -7,28 +7,29 @@ published: false
 ---
 
 # はじめに
-Next.jsの[エラーページの設定](https://nextjs.org/docs/advanced-features/custom-error-page)について少しはまったのでメモしておきます。
+Next.jsの[公式チュートリアル](https://nextjs.org/learn/basics/create-nextjs-app)を1周した後にやることを探していました。
 
-Next.jsの[公式チュートリアル](https://nextjs.org/learn/basics/create-nextjs-app)を1周した後にやると効率的です。
+TypeSxcriptのリファクタリングが終わった後、エラーページのリダイレクト設定をしようとしました。
+
+その際、Next.jsの[エラーページの設定](https://nextjs.org/docs/advanced-features/custom-error-page)について色々と模索したのでメモしておきます。
 
 # 環境
 WSL2
+
 Ubuntu 20.04 on Windows(11)
 
 # Custom Error Pageについて
-[Custom Error Page](https://nextjs.org/docs/advanced-features/custom-error-page)を読んでみる。
+[Custom Error Page](https://nextjs.org/docs/advanced-features/custom-error-page)を読んでみます。
 
-※今回はTypeScriptを用いるので読み替え/書き換えています。
+デフォルト設定では無機質なので、プロジェクトフォルダに`pages/_error.tsx`を用意することでステータスコードに応じたカスタムページを表示できます。
 
-`pages/_error.tsx`を用意することでレスポンスのステータスコードに応じたページが表示されます。
+ただし、ステータス毎にページを用意してユーザに対する次のアクションを指定したいですよね。
 
-ただ、カスタムページを用意してユーザに対して次のアクションを指定したいですよね。
+そこで、`pages/404.tsx`と`pages/500.tsx`を用意することで`pages/_error.tsx`に入ってきたステータスコードのうち`404`と`500`だけをそれぞれのカスタムページ`pages/404.tsx`、`pages/500.tsx`にリダイレクトできます（それ以外のステータスコードは`pages/_error.tsx`に反映されます）。
 
-そこで、`pages/404.tsx`と`pages/500.tsx`を用意することで`pages/_error.tsx`に入ってきたステータスコードのうち`404`と`500`だけをそれぞれのカスタムページ`pages/404.tsx`、`pages/500.tsx`にリダイレクトさせてくれます。それ以外のステータスコードは`pages/_error.tsx`に反映されます。
+もちろん、`pages/_error.tsx`で`404`の場合はこの表記、`500`の場合はこの表記、それ以外のステータスコードはこの表記というような条件分岐をしてもよいですが、Next.js公式が用意してくれたエラーハンドリング機能を使用した方が適当です。
 
-もちろん、`pages/_error.tsx`で`404`の場合はこの表記、`500`の場合はこの表記、それ以外のステータスコードはこの表記というような条件分岐をしてもよいですがせっかくNext.js公式さんが用意してくれたのでそのエラーハンドリング機能を使用します。
-
-※こういうソースはあまりよくないということ。
+※こういうソースはあまりよくないという意味です。
 ```tsx: pages/_error.tsx
 const Error: NextPage<Props> = ({ statusCode }) => {
   if(statusCode == 404){
@@ -46,7 +47,9 @@ const Error: NextPage<Props> = ({ statusCode }) => {
 ```
 
 # 動作確認
-順番に設定を変更していき、無効なURLをリクエストした際にどのようなページが表示されるかを確認してみる。
+それでは`pages/`で順番に設定を変更していき、無効なURLをリクエストした際にどのようなページが表示されるかを確認してみます。※今回はTypeScriptを用いるので公式のソースを読み替え/書き換えています。
+
+下記がリクエスト内容
 ```
 Request URL: http://localhost:3000/aaa
 Request Method: GET
@@ -58,7 +61,7 @@ Status Code: 404 Not Found
 
 ![pages/に何も設定しない場合](../images/default.png)
 
-## 2. `pages/_error.tsx`を追加するとErrorコンポーネント内のソースに応じたページが表示される
+## 2. pages/_error.tsxを追加するとErrorコンポーネント内のソースに応じたページが表示される
 - ソース
 ```tsx: pages/_error.tsx
 import React from 'react';
@@ -89,7 +92,7 @@ export default Error;
 ```
 
 
-## 3. `pages/404.tsx`, `pages/500.tsx`を追加するとカスタムページが表示される
+## 3. pages/404.tsx, pages/500.tsxを追加するとカスタムページが表示される
 - ソース
 ```tsx: pages/_404.tsx
 export default function Custom404() {
@@ -116,9 +119,12 @@ export default function Custom500() {
 
 # おまけ
 ## SSR
-[Reusing the built-in error page](https://nextjs.org/docs/advanced-features/custom-error-page#reusing-the-built-in-error-page)を読んでみる。
+[Reusing the built-in error page](https://nextjs.org/docs/advanced-features/custom-error-page#reusing-the-built-in-error-page)を読んでみます。
+
 Errorコンポーネントを使いたいページに対しては`pages/_error.tsx`ではなく`next/error`からインポートすることに注意します。
-公式ではGutHub APIを用いていますが実際には他の外部APIか自作APIを使うはずなので、初期値の設定やエラーステータスのキャッチ方法などを抑えておくとよいです。
+
+公式では例としてGitHub APIを用いていますが実際には他の外部APIか自作APIを使うはずなので、初期値の設定やエラーステータスのキャッチ方法などを抑えておくとよいです。
+
 簡単なサンプルソースはこちら。
 
 ```tsx: xxx/test.tsx
@@ -153,7 +159,10 @@ const SamplePage: React.FC<Props> = (props) => {
 
 ## 特定のパスをアクセス制御する
 `pages/_error.tsx`のErrorコンポーネントを特定パスで呼び出すなどの設定も可能です。
-かなり地道なパス指定になるのでブレークポイントを貼りながらリクエストURLがどのような値になっているかを確認して条件分岐でエラーページに強制遷移させます。
+
+パス指定はブレークポイントを貼りながらリクエストパスがどのような値になっているかを確認する少し地道な作業になるのでここはお好みでお願いします。
+
+このようにリクエストパスを取得もしくは再作成した後、条件分岐でエラーページに遷移させます。
 ```tsx: templates/users.tsx
 import { useRouter } from 'next/router'
 
@@ -173,10 +182,11 @@ const getTestuser: React.FC = () => {
 ```
 
 # next-config.jsでリダイレクト設定
-ページコンポーネント等を用意したくない場合は面倒な設定を避けて`next-config.js`を設定します。
-ただし、あまりに強力なので消したくないパスも消えてしまう場合があります。
+ページコンポーネント等を用意したくない場合は`next-config.js`を設定します。
 
-例えば下記の設定をしてしまうと`/users/:slug`のslugにはどんな値を入力しても`404`に飛んでしまいます。データベースに存在しているユーザも存在していないデータも`404`に飛ばすことは避けたいのでデータベース関連が付随するようなパスを指定することはおすすめできません。
+ただし、消して欲しくないパスもルーティングパスにリダイレクトされる場合があります。
+
+例えば下記の設定をしてしまうと`/users/:slug`のslugにはどんな値を入力しても`404`に飛んでしまいます。データベースに存在しているユーザも存在していないユーザも`/404`にリダイレクトされてしまうのでデータベース周りのパラメータが付随するようなパス指定はおすすめできません。
 
 ```js: next.config.js
 module.exports = {
@@ -196,7 +206,7 @@ module.exports = {
 # 感想
 ユーザが無効なリクエストをしたときに無機質な404ページが表示されると次の手段に移行できないため、大規模ユーザを抱えるサイトではカスタムエラーページを用意することが一般的になっています。
 
-カスタムページにはそのwebサイトのヘッダーとフッター、何が起こったのかという文言、次のアクションを指定する「TOPページに戻る」などのボタンが用意されています。
+カスタムページにはそのwebサイトのヘッダーとフッター、何が起こったのかという「ご指定のページは見つかりません」のような文言、次のアクションを指定する「TOPページに戻る」などのボタンが用意されています。
 
 こういったカスタムページを用意するちょっとした気遣いでユーザ離れを回避できそうですね。
 
