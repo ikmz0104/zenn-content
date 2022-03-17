@@ -1,13 +1,19 @@
 ---
-title: "Ubuntu 20.04にPostgreSQLをインストールする方法の備忘録"
+title: "Ubuntuでpsqlコマンドが叩けるようになるまで"
 emoji: "😊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: []
 published: false
 ---
 
-Nestjsプロジェクトを扱う際に、Ubuntu上にPostgresをインストールする手順を備忘録的に書いていきます。TDDで発生エラーを読みながら対応していきます。少し遠回りになりますがOSやLinuxに関する知識のおさらいも兼ねて書きます。
+# はじめに
+Nestjsプロジェクトを扱う際に、Ubuntu上にPostgresをインストールする手順を備忘録的に書いていきます。
 
+TDDで発生エラーを読みながら対応していきます。
+
+少し遠回りになりますがOSやLinuxに関する知識のおさらいも兼ねて書きます。
+
+※この記事を参考に環境構築を行いました。
 https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart-ja
 
 ※このエラーに詰まっている方のために本記事を書いております。
@@ -16,29 +22,13 @@ postgres@ikmz:~$ psql
 psql: error: could not connect to server: No such file or directory
         Is the server running locally and accepting
         connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5432"?
-
-//日本語訳
-psql：エラー：ソケット "/var/run/postgresql/.s.PGSQL.5432"のサーバーへの接続に失敗しました：そのようなファイルまたはディレクトリはありません
-        サーバーはローカルで実行されており、そのソケットで接続を受け入れていますか？
 ```
+
+## 環境
+Ubuntu 20.04 (Windows 11 Pro)
 
 # PostgreSQLのインストール
-1. まず、何の設定もせずに`yarn run start`を叩いた場合このように怒られます。
-
-```
-ikmz@ikmz:~/dev/nestjs-project$ yarn run start
-yarn run v1.22.17
-Error: Can't reach database server at `localhost`:`5432`
-
-Please make sure your database server is running at `localhost`:`5432`.
-    at /home/ikmz/dev/nestjs-project/node_modules/@prisma/client/runtime/index.js:36300:21
-error Command failed with exit code 1.
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
-```
-
-⇒「database server is running at `localhost`:`5432`.」とあるので、データベースサーバとの疎通、起動ができていないですね。
-
-2. PostgreSQLをインストールします
+1. PostgreSQLをインストールします
 準備としてサーバのローカルパッケージを最新の状態に更新します。
 ```
 ikmz@ikmz:~/dev/nft-connect-api$ sudo apt update
@@ -48,7 +38,8 @@ Building dependency tree
 Reading state information... Done
 146 packages can be upgraded. Run 'apt list --upgradable' to see them.
 ```
-追加機能（-contrib）とともにPostgresパッケージをインストールします。
+
+2. 追加機能（-contrib）とともにPostgresパッケージをインストールします。
 ```
 ikmz@ikmz:~/dev/nft-connect-api$ sudo apt install postgresql postgresql-contrib
 Reading package lists... Done
@@ -63,7 +54,7 @@ postgresql-contrib is already the newest version (12+214ubuntu0.1).
 ひとまず、デフォルトのPostgresロールに関連付けられた`postgres`というユーザーアカウントが作成されました。
 
 # PostgreSQLのロールとデータベースの使用
-3. サーバー上のpostgresアカウントに切り替えます
+2. サーバー上のpostgresアカウントに切り替えます
 ```
 ikmz@ikmz:~/dev/nft-connect-api$ sudo -i -u postgres
 Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.10.16.3-microsoft-standard-WSL2 x86_64)
@@ -95,7 +86,7 @@ psql: error: could not connect to server: No such file or directory
         connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5432"?
 ```
 
-Linuxで通信を行うための拠点となるソケットファイルが見当たらず通信を行えないというエラーですね。
+Linuxで通信を行うための拠点となるソケットファイルが見当たらず通信を行えないというエラーがでますね。
 
 5. postgresqlサービスを起動してみます
 service コマンドから操作できます。
@@ -136,6 +127,7 @@ postgres is not in the sudoers file.  This incident will be reported.
 このエラーはsudoユーザーに追加していないユーザーでsudoコマンドを実行した際に表示されます。
 
 9. postgresがsudoで実行できるようにしていきます
+Linux OS内のグループ一覧を確認します。catコマンドで/etc/groupをのぞき、grepコマンドでpostgresグループ内の内容を把握します。
 ```
 postgres@ikmz:~$ cat /etc/group | grep postgres
 ssl-cert:x:119:postgres
@@ -170,7 +162,7 @@ pg_ctl: could not start server
 Examine the log output.
 ```
 
-⇒秘密鍵の居場所がわかりませんと怒られますね
+⇒秘密鍵の居場所がわかりませんと怒られますね。先ほどの手順(9)で何か必要ないところまで変更してしまったかもしれませんね。
 
 11. この記事に沿って秘密鍵の居場所を特定し権限関係も確認します
 https://stackoverflow.com/questions/34209661/fatal-could-not-access-private-key-file-etc-ssl-private-ssl-cert-snakeoil-key
@@ -210,8 +202,6 @@ postgres@ikmz:~$ sudo /etc/init.d/postgresql start
  * Starting PostgreSQL 14 database server [ OK ] 
 ```
 
-ヨシ！(現場猫)
-
 14. 再度Postgresプロンプトにアクセスします
 ```
 postgres@ikmz:~$ psql
@@ -219,52 +209,16 @@ psql (14.2 (Ubuntu 14.2-1.pgdg20.04+1), server 12.9 (Ubuntu 12.9-0ubuntu0.20.04.
 Type "help" for help.
 ```
 
-初期導入時はpostgresというユーザーが作成されるが、パスワードが設定されないので注意。
-ここまでの段階でpassword設定を行う必要があります。おそらくどの段階でも可能かと。passwordは試験用に'postgres'とします。
+ヨシ！(現場猫)
+
+
+# おまけ
+※初期導入時はpostgresというユーザーが作成されますが、パスワードがデフォルトで設定されないのでここで設定しておきます。passwordは試験用に'postgres'とします。
 http://db-study.com/archives/121
 ```
 postgres=# alter role postgres with password 'postgres';
 ALTER ROLE
 ```
 
-
-
-
-
-```
-ikmz@ikmz:~/dev/nft-connect-api$ yarn run start
-yarn run v1.22.17
-$ nest start
-
-
-Error: Database `nftconnect.public` does not exist on the database server at `localhost:5432`.
-    at /home/ikmz/dev/nft-connect-api/node_modules/@prisma/client/runtime/index.js:35681:21
-error Command failed with exit code 1.
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
-```
-
-
-https://github.com/prisma/prisma/issues/7440
-
-
-```
-ikmz@ikmz:~/dev/nft-connect-api$ yarn run start
-yarn run v1.22.17
-$ nest start
-
-
-Error: Database `nftconnect.public` does not exist on the database server at `localhost:5432`.
-    at /home/ikmz/dev/nft-connect-api/node_modules/@prisma/client/runtime/index.js:35681:21
-error Command failed with exit code 1.
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
-```
-
-```
-ikmz@ikmz:~/dev/nft-connect-api$ yarn run start
-yarn run v1.22.17
-$ nest start
-[Nest] 26246  - 03/14/2022, 9:55:46 PM     LOG [NestFactory] Starting Nest application...
-[Nest] 26246  - 03/14/2022, 9:55:47 PM     LOG [InstanceLoader] AppModule dependencies initialized +218ms
-...
-[Nest] 26246  - 03/14/2022, 9:55:47 PM     LOG [NestApplication] Nest application successfully started +238ms
-```
+# おわりに
+docker使う準備でも始めるか
