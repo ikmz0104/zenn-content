@@ -3,7 +3,7 @@ title: "Ubuntu20.04でpsqlコマンドが叩けるようになるまで"
 emoji: "😊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["linux", "ubuntu", "ubuntu2004", "postgresql"]
-published: false
+published: true
 ---
 
 # はじめに
