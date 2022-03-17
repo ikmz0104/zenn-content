@@ -7,15 +7,15 @@ published: false
 ---
 
 # はじめに
-Ubuntu上にPostgresをインストールしPostgresプロンプトにアクセスする手順を備忘録的に書いていきます。
+Ubuntu上にPostgresをインストールしPostgresプロンプトにアクセスする手順を備忘録として書いておきます。
 
-少し遠回りになりますがTDDで発生エラーを読みながら対応し、OSやLinuxに関する知識のおさらいを行います。
+少し遠回りになりますがTDDで発生エラーを読みながら対応しOSやLinuxに関する知識のおさらいを行います。
 
-※この記事を参考に環境構築を行いました。
+※下記記事を参考に環境構築を行いました。
 
 https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart-ja
 
-※このエラーに詰まっている方のために本記事を書いております。
+※下記エラーに詰まっている方のために本記事を書いております。
 ```
 postgres@ikmz:~$ psql
 psql: error: could not connect to server: No such file or directory
@@ -28,6 +28,7 @@ Ubuntu 20.04 (Windows 11 Pro)
 
 # PostgreSQLのインストール
 1. PostgreSQLをインストールします
+
 準備としてサーバのローカルパッケージを最新の状態に更新します。
 ```
 ikmz@ikmz:~/dev/test$ sudo apt update
@@ -87,9 +88,10 @@ psql: error: could not connect to server: No such file or directory
 
 Linuxで通信を行うための拠点となるソケットファイルが見当たらず通信を行えないというエラーがでますね。
 
-下記手順（5～13）で対処していきます。
+## 下記手順（5～13）で対処していきます。
 
 5. postgresqlサービスを起動してみます
+
 service コマンドから操作できます。
 ```
 postgres@ikmz:~$ sudo service postgresql start
@@ -108,6 +110,7 @@ Ver Cluster Port Status Owner    Data directory              Log file
 ⇒DBサーバがダウンしていることが確認できました。
 
 7. PostgreSQLクラスタを起動します
+
 クラスタとは1つのサーバインスタンスによって管理されるデータベースの群を指します。今回はその中でも`postgresql/12/main`を起動します。
 ```
 postgres@ikmz:~$ pg_ctlcluster 12 main start
@@ -185,10 +188,12 @@ uid=112(postgres) gid=120(postgres) groups=120(postgres),27(sudo)
 新しいフォルダを作成して秘密鍵をmvコマンドで移動させるような方針のようでしたが、なんか怖いので別の方法で試しました。
 
 12. 秘密鍵の所有者および権限を変更する
+
 https://gist.github.com/GabLeRoux/0c60f9be0c28b6b41f64cb55474b0ccb
 
 - sudo chown(change owner) で秘密鍵の所有者を変更します。
 - sudo chmod(change mode) で秘密鍵のアクセス権(パーミッション)を変更します。
+
 ※chmod 740で所有者に全権限、グループに読み取り権限を与えます。他には一切権限を与えません。
 ```
 postgres@ikmz:~$ gpasswd -a postgres ssl-cert
@@ -216,6 +221,7 @@ Type "help" for help.
 
 # おまけ
 ※初期導入時はpostgresというユーザーが作成されますが、パスワードがデフォルトで設定されないのでここで設定しておきます。passwordは試験用に'postgres'とします。
+
 http://db-study.com/archives/121
 ```
 postgres=# alter role postgres with password 'postgres';
