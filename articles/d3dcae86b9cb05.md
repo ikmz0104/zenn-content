@@ -1,5 +1,5 @@
 ---
-title: "Ubuntu 20.04 でpsqlコマンドが叩けるようになるまで"
+title: "Ubuntu20.04でpsqlコマンドが叩けるようになるまで"
 emoji: "😊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["Ubuntu", "Ubuntu 20.04"]
