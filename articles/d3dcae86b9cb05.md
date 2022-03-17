@@ -170,6 +170,7 @@ Examine the log output.
 ⇒秘密鍵の居場所がわかりませんと怒られますね。先ほどの手順(9)で何か必要ないところまで変更してしまったかもしれませんね。
 
 11. この記事に沿って秘密鍵の居場所を特定し権限関係も確認します
+
 https://stackoverflow.com/questions/34209661/fatal-could-not-access-private-key-file-etc-ssl-private-ssl-cert-snakeoil-key
 
 ```
