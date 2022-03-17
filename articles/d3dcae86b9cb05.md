@@ -1,19 +1,18 @@
 ---
-title: "Ubuntuでpsqlコマンドが叩けるようになるまで"
+title: "Ubuntu 20.04 でpsqlコマンドが叩けるようになるまで"
 emoji: "😊"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: []
+topics: ["Ubuntu", "Ubuntu 20.04"]
 published: false
 ---
 
 # はじめに
-Nestjsプロジェクトを扱う際に、Ubuntu上にPostgresをインストールする手順を備忘録的に書いていきます。
+Ubuntu上にPostgresをインストールしPostgresプロンプトにアクセスする手順を備忘録的に書いていきます。
 
-TDDで発生エラーを読みながら対応していきます。
-
-少し遠回りになりますがOSやLinuxに関する知識のおさらいも兼ねて書きます。
+少し遠回りになりますがTDDで発生エラーを読みながら対応し、OSやLinuxに関する知識のおさらいを行います。
 
 ※この記事を参考に環境構築を行いました。
+
 https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart-ja
 
 ※このエラーに詰まっている方のために本記事を書いております。
@@ -31,7 +30,7 @@ Ubuntu 20.04 (Windows 11 Pro)
 1. PostgreSQLをインストールします
 準備としてサーバのローカルパッケージを最新の状態に更新します。
 ```
-ikmz@ikmz:~/dev/nft-connect-api$ sudo apt update
+ikmz@ikmz:~/dev/test$ sudo apt update
 [sudo] password for ikmz: 
 Reading package lists... Done
 Building dependency tree       
@@ -41,7 +40,7 @@ Reading state information... Done
 
 2. 追加機能（-contrib）とともにPostgresパッケージをインストールします。
 ```
-ikmz@ikmz:~/dev/nft-connect-api$ sudo apt install postgresql postgresql-contrib
+ikmz@ikmz:~/dev/test$ sudo apt install postgresql postgresql-contrib
 Reading package lists... Done
 Building dependency tree       
 Reading state information... Done
@@ -54,9 +53,9 @@ postgresql-contrib is already the newest version (12+214ubuntu0.1).
 ひとまず、デフォルトのPostgresロールに関連付けられた`postgres`というユーザーアカウントが作成されました。
 
 # PostgreSQLのロールとデータベースの使用
-2. サーバー上のpostgresアカウントに切り替えます
+3. サーバー上のpostgresアカウントに切り替えます
 ```
-ikmz@ikmz:~/dev/nft-connect-api$ sudo -i -u postgres
+ikmz@ikmz:~/dev/test$ sudo -i -u postgres
 Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.10.16.3-microsoft-standard-WSL2 x86_64)
 
  * Documentation:  https://help.ubuntu.com
@@ -87,6 +86,8 @@ psql: error: could not connect to server: No such file or directory
 ```
 
 Linuxで通信を行うための拠点となるソケットファイルが見当たらず通信を行えないというエラーがでますね。
+
+下記手順（5～13）で対処していきます。
 
 5. postgresqlサービスを起動してみます
 service コマンドから操作できます。
@@ -123,11 +124,12 @@ postgres is not in the sudoers file.  This incident will be reported.
 ```
 ⇒実行権限がないと怒られますね
 
-なので、「postgres is not in the sudoers file.  This incident will be reported.」が根本的な原因のようなのでこれを解決させます。
-このエラーはsudoユーザーに追加していないユーザーでsudoコマンドを実行した際に表示されます。
+「postgres is not in the sudoers file.  This incident will be reported.」が根本的な原因のようなのでこれを解決させます。このエラーはsudoユーザーに追加していないユーザーでsudoコマンドを実行した際に表示されます。
 
 9. postgresがsudoで実行できるようにしていきます
-Linux OS内のグループ一覧を確認します。catコマンドで/etc/groupをのぞき、grepコマンドでpostgresグループ内の内容を把握します。
+- Linux OS内のグループ一覧を確認します。catコマンドで/etc/groupをのぞき、grepコマンドでpostgresグループ内の内容を把握します。
+- postgresユーザーでsudoを利用できるようにします。
+- 変更内容を確認し、`sudo: `にpostgresが追加されていることを確認します
 ```
 postgres@ikmz:~$ cat /etc/group | grep postgres
 ssl-cert:x:119:postgres
