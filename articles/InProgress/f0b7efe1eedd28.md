@@ -42,6 +42,9 @@ P = H(L||R)　※||は連結
 ## マークルルート
 最高位の親ハッシュのこと。こいつを求めるまで順序付きハッシュリストをペアにしてハッシュ化していきます。
 
+## 包含証明
+https://zenn.dev/link/comments/4b76af95d48dd4
+
 # 動作確認
 
 使用する順序付きハッシュリスト
@@ -71,8 +74,20 @@ HASH256
 ```
 
 
-## 1 
-## 2
+## 1 親ハッシュを求める
+左ハッシュと右ハッシュを連結して親ハッシュを求めます
+```
+# 左ハッシュ
+leftHash = bytes.fromhex('c117ea8ec828342f4dfb0ad6bd140e03a50720ece40169ee38bdc15d9eb64cf5')
+# 右ハッシュ
+rightHash = bytes.fromhex('c131474164b412e3406696da1ee20ab0fc9bf41c8f05fa8ceea7a08d672d7cc5')
+# 親ハッシュ
+parent = hash256(leftHash + rightHash)
+print(parent.hex())
+```
+結果：`8b30c5ba100f6f2e5ad1e2a742e5020491240f8eb514fe97c713c31718ad7ecd`
+
+## 2 マークルペアレントレベルに対応する新しいハッシュリストを求める
 ## 3
 ## 4
 
