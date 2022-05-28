@@ -7,6 +7,7 @@ published: false
 ---
 
 # はじめに
+
 ブロックチェーン技術に関する記事を読んでいると頻繁にマークルツリーという言葉がでてくるので、理解のため実装して動作確認してみました。
 
 こちらが今回実装＆動作確認したソースです。
@@ -14,9 +15,11 @@ published: false
 https://github.com/ikmz0104/merkle-root/blob/main/main.ipynb
 
 # 環境
+
 Jupyter Notebook
 
 ## マークルツリーについて
+
 マークルツリーとは、用意した順序付きハッシュリストをハッシュ化していき求まった一つのハッシュと元データの構造の整合性を見ることで、改ざんが行われていないか検証する技術およびデータ構造のことです。
 
 完全なブロックチェーンのデータを保持できないスマホのような軽量クライアントは、このマークルツリーを用いてブロックヘッダのマークルルートフィールドを確認することで、トランザクションの整合性を確認し、取引の安全性を確認数ることができます。（[詳細]](https://zenn.dev/link/comments/d85b3f179e0019)）
@@ -32,25 +35,26 @@ Jupyter Notebook
 ![サトシ・ナカモトの論文より](../images/hash1.png)
 
 マークルルートを求める処理フローは下記の通りです。
+
 1. 任意のハッシュ関数を使って、順序付きハッシュリストの要素全てをハッシュ化する
 2. ハッシュの個数が奇数なら末尾のハッシュを複製して偶数にする
 3. ハッシュをペアにして連結し新たなハッシュを生成
-4. 2～4を繰り返す（ハッシュの個数が1になれば終了）
+4. 2 ～ 4 を繰り返す（ハッシュの個数が 1 になれば終了）
 
 このように、マークルルートを求める過程で出来上がったツリー構造をマークルツリーもしくはハッシュツリーと呼びます。
 求まったマークルルートをキーにして合致したブロックヘッダのみを軽量クライアントが保持するようになります。
 
 また、各ペアの親ハッシュを得るための条件（順序付きハッシュリストが３つ以上存在）のことを`マークルペアレントレベル`と呼びます
 
-さらに、下図のようにマークルルートを求める最短経路を`マークルパス`と呼びます。この過程で求めたマークルルートと軽量クライアントが保持したハッシュ値が一致していればトランザクションの改竄が行われていないことの証明になります。（[包含証明](https://zenn.dev/link/comments/4b76af95d48dd4)
+さらに、マークルルートを求める最短経路を`マークルパス`と呼びます。この過程で求めたマークルルートと軽量クライアントが保持したハッシュ値が一致していればトランザクションの改竄が行われていないことの証明になります。（[包含証明](https://zenn.dev/link/comments/4b76af95d48dd4)
 ）
 
-![サトシ・ナカモトの論文より](../images/hash2.png)
-
 # マークルツリーの導出
+
 ## 実装の準備
 
 こちらが今回使用する順序付きハッシュリストです。必要に応じて使用するハッシュを変えていきます。
+
 ```
 hex_hashes = [
     "9745f7173ef14ee4155722d1cbf13304339fd00d900b759c6f9d58579b5765fb",
@@ -72,19 +76,23 @@ hex_hashes = [
 ]
 ```
 
-上記のハッシュリストを暗号化するために、暗号学的ハッシュ関数はHASH256を用いることにします。（処理フロー１）
+上記のハッシュリストを暗号化するために、暗号学的ハッシュ関数は HASH256 を用いることにします。（処理フロー１）
+
 ```
 from helper import hash256
 ```
 
-
 ## 1 親ハッシュを求める
+
 ハッシュをペアにして連結し新たなハッシュを生成していく際（処理フロー３）、
 ２つのペアとなるハッシュについてはインデックス順に左ハッシュ(L)・右ハッシュ(R)と呼び、左右のハッシュを連結(H)した結果を親ハッシュもしくはマークルペアレント(P)と呼びます。
+
 ```
 P = H(L||R)　※||は連結
 ```
+
 では、左ハッシュと右ハッシュを連結して親ハッシュを求めます
+
 ```py
 from helper import hash256
 
@@ -94,12 +102,15 @@ parent = hash256(leftHash + rightHash)
 
 print(parent.hex())
 ```
+
 結果：`8b30c5ba100f6f2e5ad1e2a742e5020491240f8eb514fe97c713c31718ad7ecd`
 
 ## 2 マークルペアレントレベルに対応する新たなハッシュリストを求める
+
 ハッシュの個数が奇数なら末尾のハッシュを複製して偶数にし（処理フロー２）、ハッシュをペアにして連結し新たなハッシュを生成します（処理フロー３）。
 
 試験的に、５つのハッシュリストを用意すれば末尾のハッシュを複製してハッシュリストを偶数に整理した後、ペアを作って連結した結果、要素数３のハッシュリストが出来上がるはずです。
+
 ```py
 # 順序付きハッシュリストをインプットしてハッシュ化
 hex_hashes = [
@@ -125,7 +136,9 @@ for i in range(0, len(hashes), 2):
 for item in parent_level:
     print(item.hex())
 ```
+
 結果：
+
 ```
 8b30c5ba100f6f2e5ad1e2a742e5020491240f8eb514fe97c713c31718ad7ecd
 7f4e6f9e224e20fda0ae4c44114237f97cd35aca38d83081c9bfd41feb907800
@@ -133,7 +146,8 @@ for item in parent_level:
 ```
 
 ## 3 マークルルートを求める
-whileループの繰り返し条件としてハッシュリストの長さが1より大きいかどうかを判定し、長さが1になればループを終了します。
+
+while ループの繰り返し条件としてハッシュリストの長さが 1 より大きいかどうかを判定し、長さが 1 になればループを終了します。
 
 ```py
 from helper import merkle_parent_level
@@ -157,17 +171,20 @@ while len(current_hashes) > 1:
     current_hashes = merkle_parent_level(current_hashes)
 print(current_hashes[0].hex())
 ```
+
 結果：`acbcab8bcc1af95d8d563b77d24c3d19b18f1486383d75a5085c4e86c86beed6`
 
 マークルルートを持つことで、軽量クライアントがトランザクション全体の情報を知ることなく指定のトランザクションがブロックに含まれていることを証明することの証明を確認できます。
 
 # おまけ
+
 ## マークルツリーの構造を把握する
+
 軽量クライアントがフルノードから受信する情報のうち必要なのがリーフ数（トランザクション数）です。
 
 理由は、このリーフ数をもとにマークルツリーの構造を把握できるからです。
 
-マークルツリーの深さはlog2^(リーフ数)で把握でき、これをforループの繰り返し条件に利用します。
+マークルツリーの深さは log2^(リーフ数)で把握でき、これを for ループの繰り返し条件に利用します。
 
 実装して動作確認してみます。
 
@@ -190,7 +207,9 @@ for depth in range(max_depth + 1):
 for level in merkle_tree:
     print(level)
 ```
+
 結果：
+
 ```
 [None]
 [None, None]
@@ -200,6 +219,7 @@ for level in merkle_tree:
 ```
 
 ハッシュリストを指定します。
+
 ```py
 from merkleblock import MerkleTree
 from helper import merkle_parent_level
@@ -232,6 +252,7 @@ print(tree)
 ```
 
 結果：
+
 ```
 *597c4baf.*
 6382df3f..., 87cf8fa3...
@@ -240,17 +261,106 @@ print(tree)
 9745f717..., 5573c8ed..., 82a02ecb..., 507ccae5..., a7a4aec2..., bb626766..., ea6d7ac1..., 45774386..., 76880292..., b1ae7f15..., 9b74f89f..., b3a92b5b..., b5c0b915..., c9d52c5c..., c555bc5f..., f9dbfafc...
 ```
 
+## マークルパスの探索
 
-## バイナリツリー
+そもそも、バイナリツリー（二分木）をどのように走査するか？
 
+`幅優先`では、親レベルごとに左から右に調査する一方で、`深さ優先`では、各ノードにおける子ハッシュのうち左ハッシュを優先して調査します。
+
+深さ優先であれば、計算可能なノードにハッシュを設定することができます。
+
+これは、下図に対応しています。
+![サトシ・ナカモトの論文より](../images/hash2.png)
+
+マークルルートを導出する過程において、深さ優先探索ではリーフにいる場合は親ハッシュに戻る他走査の必要がなく、ハッシュ数が偶数・奇数である場合にも対応して探索できるように実装を工夫する必要があります。
+
+### 偶数で処理が走るか検証
+
+```py
+from merkleblock import MerkleTree
+from helper import merkle_parent
+hex_hashes = [
+    "9745f7173ef14ee4155722d1cbf13304339fd00d900b759c6f9d58579b5765fb",
+    "5573c8ede34936c29cdfdfe743f7f5fdfbd4f54ba0705259e62f39917065cb9b",
+    "82a02ecbb6623b4274dfcab82b336dc017a27136e08521091e443e62582e8f05",
+    "507ccae5ed9b340363a0e6d765af148be9cb1c8766ccc922f83e4ae681658308",
+]
+tree = MerkleTree(len(hex_hashes))
+tree.nodes[2] = [bytes.fromhex(h) for h in hex_hashes]
+while tree.root() is None:
+    if tree.is_leaf():
+        tree.up()
+    else:
+        left_hash = tree.get_left_node()
+        if left_hash is None:
+            tree.left()
+        elif tree.right_exists():
+            right_hash = tree.get_right_node()
+            if right_hash is None:
+                tree.right()
+            else:
+                tree.set_current_node(merkle_parent(left_hash, right_hash))
+                tree.up()
+        else:
+            tree.set_current_node(merkle_parent(left_hash, left_hash))
+            tree.up()
+print(tree)
+```
+
+結果：
+
+```
+3ba6c080...
+272945ec..., 9a38d037...
+9745f717..., 5573c8ed..., 82a02ecb..., 507ccae5...
+```
+
+### 奇数でも処理が走るか検証
+
+```py
+from merkleblock import MerkleTree
+from helper import merkle_parent
+hex_hashes = [
+    "9745f7173ef14ee4155722d1cbf13304339fd00d900b759c6f9d58579b5765fb",
+    "5573c8ede34936c29cdfdfe743f7f5fdfbd4f54ba0705259e62f39917065cb9b",
+    "82a02ecbb6623b4274dfcab82b336dc017a27136e08521091e443e62582e8f05",
+]
+tree = MerkleTree(len(hex_hashes))
+tree.nodes[2] = [bytes.fromhex(h) for h in hex_hashes]
+while tree.root() is None:
+    if tree.is_leaf():
+        tree.up()
+    else:
+        left_hash = tree.get_left_node()
+        if left_hash is None:
+            tree.left()
+        elif tree.right_exists():
+            right_hash = tree.get_right_node()
+            if right_hash is None:
+                tree.right()
+            else:
+                tree.set_current_node(merkle_parent(left_hash, right_hash))
+                tree.up()
+        else:
+            tree.set_current_node(merkle_parent(left_hash, left_hash))
+            tree.up()
+print(tree)
+```
+結果：
+
+```
+a779fe9f...
+272945ec..., bdca1c60...
+9745f717..., 5573c8ed..., 82a02ecb...
+```
 
 # まとめ
-マークルルートと求めるためにはハッシュの個数が一つになるまでマークルペアレントレベルを求めることになる。
+マークルルートの導出とそのメリットを理解できました。（[メモ](https://zenn.dev/link/comments/3ad86394dee14a)）
 
-
-最後までお読みいただきありがとうございました。
+今回ブロックヘッダーに関する知識が軽薄に感じたため次回はブロックヘッダーに関する記事を書きたいです。
 
 # 参考
+
 https://bitcoin.org/bitcoin.pdf
 https://alis.to/gaxiiiiiiiiiiii/articles/3dy7vLZn0g89
 https://books.google.co.jp/books/about/%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0_%E3%83%93%E3%83%83%E3%83%88%E3%82%B3%E3%82%A4%E3%83%B3.html?id=FagHzgEACAAJ&source=kp_book_description&redir_esc=y
