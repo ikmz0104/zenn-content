@@ -365,9 +365,3 @@ a779fe9f...
 https://bitcoin.org/bitcoin.pdf
 https://alis.to/gaxiiiiiiiiiiii/articles/3dy7vLZn0g89
 https://books.google.co.jp/books/about/%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0_%E3%83%93%E3%83%83%E3%83%88%E3%82%B3%E3%82%A4%E3%83%B3.html?id=FagHzgEACAAJ&source=kp_book_description&redir_esc=y
-
-
-# 画像
-テスト
-
-![pages/に何も設定しない場合](../images/default.png)
